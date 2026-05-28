@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Markdown to Print-Ready PDF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1208;
+    --paper: #f5f0e8;
+    --cream: #ede7d3;
+    --accent: #c84b2f;
+    --accent-dark: #a33820;
+    --muted: #7a6e5f;
+    --line: #d4cbb8;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE TEXTURE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.4;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 6rem 2rem 4rem;
+    position: relative;
+    border-bottom: 1.5px solid var(--line);
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  .hero::before {
+    content: '§';
+    position: absolute;
+    top: 3rem;
+    left: 2rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+  }
+
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.8rem;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.1s forwards;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.8rem, 7vw, 5.5rem);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.6rem;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.25s forwards;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .subtitle {
+    font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+    color: var(--muted);
+    max-width: 560px;
+    line-height: 1.65;
+    margin-bottom: 0.8rem;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.4s forwards;
+  }
+
+  .tagline {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--muted);
+    margin-bottom: 2.8rem;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.5s forwards;
+  }
+
+  /* ── CTA ── */
+  .cta-group {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.6s forwards;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 0.9rem 2rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.2s, transform 0.15s;
+    position: relative;
+  }
+
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    right: -3px;
+    width: 100%;
+    height: 100%;
+    border: 1.5px solid var(--accent-dark);
+    z-index: -1;
+    transition: transform 0.15s;
+  }
+
+  .btn-primary:hover { background: var(--accent-dark); transform: translate(-1px, -1px); }
+  .btn-primary:hover::after { transform: translate(2px, 2px); }
+
+  .counter-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--cream);
+    border: 1px solid var(--line);
+    padding: 0.6rem 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  .counter-num {
+    font-weight: 700;
+    color: var(--ink);
+    font-size: 1rem;
+  }
+
+  /* ── SCROLL HINT ── */
+  .scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 2rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    color: var(--line);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0;
+    animation: fadeUp 1s 1.2s forwards;
+  }
+
+  .scroll-hint::before {
+    content: '';
+    width: 30px;
+    height: 1px;
+    background: var(--line);
+  }
+
+  /* ── SECTION BASE ── */
+  section {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 5rem 2rem;
+    border-bottom: 1.5px solid var(--line);
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 2.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  /* ── VALUE PROPS ── */
+  .props-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .prop-item {
+    display: grid;
+    grid-template-columns: 3rem 1fr;
+    gap: 1.5rem;
+    align-items: start;
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--line);
+    transition: background 0.2s;
+  }
+
+  .prop-item:last-child { border-bottom: none; }
+
+  .prop-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--line);
+    line-height: 1;
+    padding-top: 0.2rem;
+  }
+
+  .prop-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+  }
+
+  .prop-body {
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+
+  /* ── QUOTE ── */
+  .quote-block {
+    background: var(--cream);
+    border-left: 3px solid var(--accent);
+    padding: 2.5rem 2.5rem 2rem;
+    position: relative;
+  }
+
+  .quote-mark {
+    font-family: 'Playfair Display', serif;
+    font-size: 5rem;
+    color: var(--accent);
+    opacity: 0.2;
+    line-height: 0;
+    position: absolute;
+    top: 2.5rem;
+    left: 1.8rem;
+  }
+
+  .quote-text {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+  }
+
+  .quote-source {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding-left: 1.5rem;
+  }
+
+  /* ── FAQ ── */
+  .faq-list { display: flex; flex-direction: column; gap: 0; }
+
+  .faq-item {
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+  }
+
+  .faq-q {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 0;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    gap: 1rem;
+    user-select: none;
+  }
+
+  .faq-toggle {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.2rem;
+    color: var(--accent);
+    flex-shrink: 0;
+    transition: transform 0.2s;
+  }
+
+  .faq-item.open .faq-toggle { transform: rotate(45deg); }
+
+  .faq-a {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s;
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.7;
+  }
+
+  .faq-item.open .faq-a {
+    max-height: 200px;
+    padding-bottom: 1.5rem;
+  }
+
+  /* ── FINAL CTA ── */
+  .final-cta {
+    text-align: center;
+    padding: 6rem 2rem;
+    max-width: 860px;
+    margin: 0 auto;
+    border-bottom: none;
+  }
+
+  .final-cta h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+  }
+
+  .final-cta h2 em { font-style: italic; color: var(--accent); }
+
+  .final-cta p {
+    color: var(--muted);
+    max-width: 420px;
+    margin: 0 auto 2.5rem;
+    font-size: 0.95rem;
+  }
+
+  .email-form {
+    display: flex;
+    max-width: 420px;
+    margin: 0 auto;
+    gap: 0;
+    border: 1.5px solid var(--ink);
+  }
+
+  .email-form input {
+    flex: 1;
+    padding: 0.85rem 1rem;
+    border: none;
+    background: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    color: var(--ink);
+    outline: none;
+  }
+
+  .email-form input::placeholder { color: var(--muted); }
+
+  .email-form button {
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 0.85rem 1.4rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+
+  .email-form button:hover { background: var(--accent); }
+
+  .form-note {
+    margin-top: 0.8rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1.5px solid var(--line);
+    padding: 1.5rem 2rem;
+    max-width: 860px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  footer span {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── COUNTER ANIMATION ── */
+  @keyframes countUp {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* success state */
+  .success-msg {
+    display: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    margin-top: 1rem;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <p class="eyebrow">For indie authors · KDP Print</p>
+  <h1>Markdown to<br><em>Print-Ready</em> PDF</h1>
+  <p class="subtitle">Stop wrestling with InDesign. Get a KDP-approved PDF, directly from your Markdown, in one click.</p>
+  <p class="tagline">Built for indie authors who write, not designers who tinker.</p>
+  <div class="cta-group">
+    <a href="https://tally.so/r/javDAY" target="_blank" class="btn-primary">Join the Waitlist</a>
+    <div class="counter-pill">
+      <span class="counter-num" id="counter">57</span>
+      <span>authors already in</span>
+    </div>
+  </div>
+  <div class="scroll-hint">Scroll to learn more</div>
+</div>
+
+<!-- ── VALUE PROPS ── -->
+<section>
+  <div class="section-label">Why it works</div>
+  <div class="props-grid">
+
+    <div class="prop-item">
+      <div class="prop-num">01</div>
+      <div>
+        <div class="prop-title">For Writers, Not Designers</div>
+        <p class="prop-body">Write in simple Markdown. We handle margins, fonts, bleed, and all the scary print specs. You focus on your story — we'll make it look like a real book.</p>
+      </div>
+    </div>
+
+    <div class="prop-item">
+      <div class="prop-num">02</div>
+      <div>
+        <div class="prop-title">KDP-Ready, Guaranteed</div>
+        <p class="prop-body">Output passes Amazon KDP's strictest preflight checks. No more last-minute surprises — no rejected files, no frantic re-exports at 2am before your launch.</p>
+      </div>
+    </div>
+
+    <div class="prop-item">
+      <div class="prop-num">03</div>
+      <div>
+        <div class="prop-title">One-Click, No Learning Curve</div>
+        <p class="prop-body">No setup, no confusing options. Paste your Markdown, download your PDF. That's the entire workflow. Seriously.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── SOCIAL PROOF ── -->
+<section>
+  <div class="section-label">From the community</div>
+  <div class="quote-block">
+    <div class="quote-mark">"</div>
+    <p class="quote-text">InDesign is a troublesome assassin that can damage books.</p>
+    <p class="quote-source">— A frustrated indie author on Reddit</p>
+  </div>
+</section>
+
+<!-- ── FAQ ── -->
+<section>
+  <div class="section-label">Common questions</div>
+  <div class="faq-list">
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">
+        <span>Is this just another Pandoc wrapper?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">No. We've pre-configured all the complex settings (bleed, margins, embedded fonts) specifically for KDP print, and wrapped it in a dead-simple interface. You don't need to know what Pandoc is — or ever want to.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">
+        <span>When will it be available?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a">We're opening the beta to a limited group in the next 2 weeks. Join the waitlist for early access — beta spots are capped so we can give everyone proper attention.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── FINAL CTA ── -->
+<section class="final-cta" id="waitlist">
+  <h2>Your book deserves<br>to <em>exist</em>.</h2>
+  <p>Stop letting formatting stop you from publishing. Get early access when we launch.</p>
+  <a href="https://tally.so/r/javDAY" target="_blank" class="btn-primary" style="font-size:0.9rem; padding: 1rem 2.5rem;">
+    Reserve My Spot →
+  </a>
+  <p class="form-note">Beta opens in ~2 weeks · Limited spots</p>
+</section>
+
+<footer>
+  <span>© 2025 MD to PDF</span>
+  <span>Made for writers</span>
+</footer>
+
+<script>
+  // FAQ toggle
+  function toggleFaq(el) {
+    el.classList.toggle('open');
+  }
+
+  // Counter animation
+  function animateCounter(target, duration) {
+    const el = document.getElementById('counter');
+    const start = Math.floor(target * 0.7);
+    const range = target - start;
+    const startTime = performance.now();
+    function update(now) {
+      const t = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = Math.round(start + range * eased);
+      if (t < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+  }
+
+  // Trigger counter when visible
+  const counterObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        animateCounter(57, 1200);
+        counterObs.disconnect();
+      }
+    });
+  }, { threshold: 0.5 });
+  counterObs.observe(document.getElementById('counter'));
+
+  // Email form
+  function handleSubmit() {
+    const email = document.getElementById('emailInput').value;
+    if (!email || !email.includes('@')) {
+      document.getElementById('emailInput').style.outline = '2px solid #c84b2f';
+      return;
+    }
+    document.querySelector('.email-form').style.opacity = '0.4';
+    document.getElementById('successMsg').style.display = 'block';
+  }
+
+  // Scroll-triggered fade-ins for sections
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('section, .prop-item').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    observer.observe(el);
+  });
+</script>
+
+</body>
+</html>
